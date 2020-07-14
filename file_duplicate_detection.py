@@ -58,7 +58,7 @@ def ScanDirectory(path: str) -> dict:
                     files_dict['size'][stats_dict['size']] = [this_file_abs_name]
                 else:
                     files_dict['size'][stats_dict['size']].append(this_file_abs_name)
-                if 'inode' in files_dict.keys():
+                if 'inode' in stats_dict.keys():
                     if not stats_dict['inode'] in files_dict['inodes'].keys():
                         files_dict['inodes'][stats_dict['inode']] = [this_file_abs_name]
                     else:
