@@ -12,15 +12,13 @@
 
 import hashlib
 import os
-from pprint import pprint as dataprint
 from typing import List
-import time
 
 # Depending on usage it can be useful to exclude directories that are expected to change rapidly
 exclude_dirs = ['.cache', '.config']
-# temporary hardcoding during development
+# temporary hard coding during development
 basedir = '~/Pictures'
-basedir = '~/test'
+# basedir = '~/test'
 # blocksize for hashing
 blocksize = 65536
 
@@ -97,7 +95,7 @@ def hash_this_file(file_list: List) -> dict:
     file_hashes_dict = {}
     for this_file in file_list:
         hasher = hashlib.sha512()
-        with open(this_file,'rb') as read_this_file:
+        with open(this_file, 'rb') as read_this_file:
             my_buffer = read_this_file.read(blocksize)
             while len(my_buffer) > 0:
                 hasher.update(my_buffer)
@@ -116,14 +114,14 @@ def get_file_hashes(file_size_dict: dict) -> dict:
     return file_hashes_dict
 
 
-def main(mydir: str) -> None:
+def main(my_dir: str) -> dict:
     possible_dup_dict = {}
-    mydir = os.path.expanduser(mydir)  # gets the absolute path if given in a form like ~/mydir
-    if isdir(mydir):
-        possible_dup_dict = clean_stat_dict(scan_directory(mydir))
+    my_dir = os.path.expanduser(my_dir)  # gets the absolute path if given in a form like ~/my_dir
+    if isdir(my_dir):
+        possible_dup_dict = clean_stat_dict(scan_directory(my_dir))
         possible_dup_dict['hashes'] = get_file_hashes(possible_dup_dict['size'])
     else:
-        print('{} is not a directory.'.format(mydir))
+        print('{} is not a directory.'.format(my_dir))
     return possible_dup_dict
 
 
