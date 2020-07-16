@@ -3,13 +3,6 @@
 # None of this is code from the interview; that was via CoderPad and ended before I could grab a copy.
 # From memory of the assignment: given a starting path find duplicate files in that directory and subdirectories.
 
-# outline notes:
-# Take starting path
-# Find all files.
-# Get file size
-# Hash files
-# Compare hashes
-
 import hashlib
 import os
 from typing import List
@@ -17,8 +10,7 @@ from typing import List
 # Depending on usage it can be useful to exclude directories that are expected to change rapidly
 exclude_dirs = ['.cache', '.config']
 # temporary hard coding during development
-basedir = '~/Pictures'
-# basedir = '~/test'
+basedir = '~/'
 # blocksize for hashing
 blocksize = 65536
 
@@ -28,7 +20,7 @@ def islink(filename: str) -> bool:
 
 
 def isfile(filename: str) -> bool:
-    # for this purpose we want to exclude links.
+    # for this purpose we want to exclude symlinks.
     if not islink(filename):
         return os.path.isfile(filename)
     else:
@@ -36,7 +28,7 @@ def isfile(filename: str) -> bool:
 
 
 def isdir(filename: str) -> bool:
-    # for this purpose we want to exclude links.
+    # for this purpose we want to exclude symlinks.
     if not islink(filename):
         return os.path.isdir(filename)
     else:
@@ -54,6 +46,7 @@ def get_file_stats(filename: str) -> dict:
 
 
 def scan_directory(path: str) -> dict:
+    # Create the combined dict with output from called procedures
     files_dict = {'size': {}, 'inodes': {}}
     for this_path, these_dirs, these_files in os.walk(path, topdown=True, followlinks=False):
         these_dirs[:] = [d for d in these_dirs if d not in exclude_dirs]
@@ -74,6 +67,7 @@ def scan_directory(path: str) -> dict:
 
 
 def clear_single_entries(stat_sub_dict: dict) -> dict:
+    # If any keys have single-item lists as values then we don't need to process them
     remove_keys = [key for key in stat_sub_dict if len(stat_sub_dict[key]) < 2]
     for this_key in remove_keys:
         stat_sub_dict.pop(this_key)
@@ -94,16 +88,21 @@ def clean_stat_dict(files_dict: dict) -> dict:
 def hash_this_file(file_list: List) -> dict:
     file_hashes_dict = {}
     for this_file in file_list:
-        hasher = hashlib.sha512()
-        with open(this_file, 'rb') as read_this_file:
+        try:
+            read_this_file = open(this_file, 'rb')
+        except:
+            read_this_file.close()
+            continue
+        else:
+            hasher = hashlib.sha512()
             my_buffer = read_this_file.read(blocksize)
             while len(my_buffer) > 0:
                 hasher.update(my_buffer)
                 my_buffer = read_this_file.read(blocksize)
-        if hasher.hexdigest() not in file_hashes_dict:
-            file_hashes_dict[hasher.hexdigest()] = [this_file]
-        else:
-            file_hashes_dict[hasher.hexdigest()].append(this_file)
+            if hasher.hexdigest() not in file_hashes_dict:
+                file_hashes_dict[hasher.hexdigest()] = [this_file]
+            else:
+                file_hashes_dict[hasher.hexdigest()].append(this_file)
     return file_hashes_dict
 
 
