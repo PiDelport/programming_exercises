@@ -14,8 +14,12 @@ import hashlib
 import os
 from pprint import pprint as dataprint
 from typing import List
+import time
 
+# Depending on usage it can be useful to exclude directories that are expected to change rapidly
+exclude_dirs = ['.cache', '.config']
 # temporary hardcoding during development
+basedir = '~/Pictures'
 basedir = '~/test'
 # blocksize for hashing
 blocksize = 65536
@@ -53,17 +57,18 @@ def get_file_stats(filename: str) -> dict:
 
 def scan_directory(path: str) -> dict:
     files_dict = {'size': {}, 'inodes': {}}
-    for this_path, these_dirs, these_files in os.walk(path, followlinks=False):
+    for this_path, these_dirs, these_files in os.walk(path, topdown=True, followlinks=False):
+        these_dirs[:] = [d for d in these_dirs if d not in exclude_dirs]
         for this_file in these_files:
             this_file_abs_name = this_path + '/' + this_file
             if isfile(this_file_abs_name):
                 stats_dict = get_file_stats(this_file_abs_name)
-                if not stats_dict['size'] in files_dict['size'].keys():
+                if not stats_dict['size'] in files_dict['size']:
                     files_dict['size'][stats_dict['size']] = [this_file_abs_name]
                 else:
                     files_dict['size'][stats_dict['size']].append(this_file_abs_name)
-                if 'inode' in stats_dict.keys():
-                    if not stats_dict['inode'] in files_dict['inodes'].keys():
+                if 'inode' in stats_dict:
+                    if not stats_dict['inode'] in files_dict['inodes']:
                         files_dict['inodes'][stats_dict['inode']] = [this_file_abs_name]
                     else:
                         files_dict['inodes'][stats_dict['inode']].append(this_file_abs_name)
@@ -78,7 +83,7 @@ def clear_single_entries(stat_sub_dict: dict) -> dict:
 
 
 def dict_values_to_list(source_dict: dict) -> List[List[str]]:
-    return [source_dict[key] for key in source_dict.keys() if len(source_dict[key]) > 1]
+    return [source_dict[key] for key in source_dict if len(source_dict[key]) > 1]
 
 
 def clean_stat_dict(files_dict: dict) -> dict:
@@ -112,13 +117,14 @@ def get_file_hashes(file_size_dict: dict) -> dict:
 
 
 def main(mydir: str) -> None:
+    possible_dup_dict = {}
     mydir = os.path.expanduser(mydir)  # gets the absolute path if given in a form like ~/mydir
     if isdir(mydir):
         possible_dup_dict = clean_stat_dict(scan_directory(mydir))
         possible_dup_dict['hashes'] = get_file_hashes(possible_dup_dict['size'])
-        dataprint(possible_dup_dict)
     else:
         print('{} is not a directory.'.format(mydir))
+    return possible_dup_dict
 
 
 main(basedir)
