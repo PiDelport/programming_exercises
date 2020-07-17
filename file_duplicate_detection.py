@@ -63,10 +63,7 @@ def scan_directory(path: str) -> dict:
 
 def clear_single_entries(stat_sub_dict: dict) -> dict:
     # If any keys have single-item lists as values then we don't need to process them
-    remove_keys = [key for key in stat_sub_dict if len(stat_sub_dict[key]) < 2]
-    for this_key in remove_keys:
-        stat_sub_dict.pop(this_key)
-    return stat_sub_dict
+    return {k: v for k, v in stat_sub_dict.items() if len(v) > 1}
 
 
 def dict_values_to_list(source_dict: dict) -> List[List[str]]:
