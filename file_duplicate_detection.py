@@ -22,18 +22,12 @@ def islink(filename: str) -> bool:
 
 def isfile(filename: str) -> bool:
     # for this purpose we want to exclude symlinks.
-    if not islink(filename):
-        return os.path.isfile(filename)
-    else:
-        return False
+    return os.path.isfile(filename) and not islink(filename)
 
 
 def isdir(filename: str) -> bool:
     # for this purpose we want to exclude symlinks.
-    if not islink(filename):
-        return os.path.isdir(filename)
-    else:
-        return False
+    return os.path.isdir(filename) and not islink(filename)
 
 
 def get_file_stats(filename: str) -> dict:
