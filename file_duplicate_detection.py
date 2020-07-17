@@ -83,18 +83,14 @@ def clean_stat_dict(files_dict: dict) -> dict:
 def hash_this_file(file_list: List) -> dict:
     file_hashes_dict = defaultdict(list)
     for this_file in file_list:
-        try:
-            read_this_file = open(this_file, 'rb')
-        except:
-            read_this_file.close()
-            continue
-        else:
-            hasher = hashlib.sha512()
-            my_buffer = read_this_file.read(blocksize)
-            while len(my_buffer) > 0:
-                hasher.update(my_buffer)
+        if os.access(this_file, os.R_OK):
+            with open(this_file, 'rb') as read_this_file:
+                hasher = hashlib.sha512()
                 my_buffer = read_this_file.read(blocksize)
-            file_hashes_dict[hasher.hexdigest()].append(this_file)
+                while len(my_buffer) > 0:
+                    hasher.update(my_buffer)
+                    my_buffer = read_this_file.read(blocksize)
+                file_hashes_dict[hasher.hexdigest()].append(this_file)
     return file_hashes_dict
 
 
