@@ -5,6 +5,7 @@
 
 import hashlib
 import os
+from collections import defaultdict
 from typing import List
 
 # Depending on usage it can be useful to exclude directories that are expected to change rapidly
@@ -47,22 +48,16 @@ def get_file_stats(filename: str) -> dict:
 
 def scan_directory(path: str) -> dict:
     # Create the combined dict with output from called procedures
-    files_dict = {'size': {}, 'inodes': {}}
+    files_dict = {'size': defaultdict(list), 'inodes': defaultdict(list)}
     for this_path, these_dirs, these_files in os.walk(path, topdown=True, followlinks=False):
         these_dirs[:] = [d for d in these_dirs if d not in exclude_dirs]
         for this_file in these_files:
             this_file_abs_name = this_path + '/' + this_file
             if isfile(this_file_abs_name):
                 stats_dict = get_file_stats(this_file_abs_name)
-                if not stats_dict['size'] in files_dict['size']:
-                    files_dict['size'][stats_dict['size']] = [this_file_abs_name]
-                else:
-                    files_dict['size'][stats_dict['size']].append(this_file_abs_name)
+                files_dict['size'][stats_dict['size']].append(this_file_abs_name)
                 if 'inode' in stats_dict:
-                    if not stats_dict['inode'] in files_dict['inodes']:
-                        files_dict['inodes'][stats_dict['inode']] = [this_file_abs_name]
-                    else:
-                        files_dict['inodes'][stats_dict['inode']].append(this_file_abs_name)
+                    files_dict['inodes'][stats_dict['inode']].append(this_file_abs_name)
     return files_dict
 
 
@@ -86,7 +81,7 @@ def clean_stat_dict(files_dict: dict) -> dict:
 
 
 def hash_this_file(file_list: List) -> dict:
-    file_hashes_dict = {}
+    file_hashes_dict = defaultdict(list)
     for this_file in file_list:
         try:
             read_this_file = open(this_file, 'rb')
@@ -99,10 +94,7 @@ def hash_this_file(file_list: List) -> dict:
             while len(my_buffer) > 0:
                 hasher.update(my_buffer)
                 my_buffer = read_this_file.read(blocksize)
-            if hasher.hexdigest() not in file_hashes_dict:
-                file_hashes_dict[hasher.hexdigest()] = [this_file]
-            else:
-                file_hashes_dict[hasher.hexdigest()].append(this_file)
+            file_hashes_dict[hasher.hexdigest()].append(this_file)
     return file_hashes_dict
 
 
