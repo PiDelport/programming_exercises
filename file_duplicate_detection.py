@@ -67,7 +67,7 @@ def clear_single_entries(stat_sub_dict: dict) -> dict:
 
 
 def dict_values_to_list(source_dict: dict) -> List[List[str]]:
-    return [source_dict[key] for key in source_dict if len(source_dict[key]) > 1]
+    return [v for v in source_dict.values() if len(v) > 1]
 
 
 def clean_stat_dict(files_dict: dict) -> dict:
