@@ -80,22 +80,21 @@ def clean_stat_dict(files_dict: dict) -> dict:
     return files_dict
 
 
-def hash_this_file(file_list: List) -> dict:
-    file_hashes_dict = defaultdict(list)
-    for this_file in file_list:
-        if os.access(this_file, os.R_OK):
-            with open(this_file, 'rb') as read_this_file:
-                hasher = hashlib.sha512()
-                for my_buffer in iter(read_this_file.read, b''):
-                    hasher.update(my_buffer)
-                file_hashes_dict[hasher.hexdigest()].append(this_file)
-    return file_hashes_dict
+def hash_this_file(this_file: str) -> str:
+    with open(this_file, 'rb') as read_this_file:
+        hasher = hashlib.sha512()
+        for my_buffer in iter(read_this_file.read, b''):
+            hasher.update(my_buffer)
+    return hasher.hexdigest()
 
 
 def get_file_hashes(file_size_dict: dict) -> dict:
-    file_hashes_dict = {}
-    for this_file in file_size_dict.values():
-        file_hashes_dict.update(hash_this_file(this_file))
+    file_hashes_dict = defaultdict(list)
+    for file_list in file_size_dict.values():
+        for this_file in file_list:
+            if os.access(this_file, os.R_OK):
+                hexdigest = hash_this_file(this_file)
+                file_hashes_dict[hexdigest].append(this_file)
     return file_hashes_dict
 
 
